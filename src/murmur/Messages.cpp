@@ -15,6 +15,8 @@
 #include "Server.h"
 #include "ServerUser.h"
 #include "Version.h"
+#include <algorithm>
+
 
 #define MSG_SETUP(st) \
 	if (uSource->sState != st) { \
@@ -1109,6 +1111,15 @@ void Server::msgChannelRemove(ServerUser *uSource, MumbleProto::ChannelRemove &m
 	removeChannel(c);
 }
 
+std::string replaceAll(std::string str, const std::string& from, const std::string& to) {
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
+}
+
 void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) {
 	MSG_SETUP(ServerUser::Authenticated);
 	QMutexLocker qml(&qmCache);
@@ -1133,7 +1144,21 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 		case 2:
 			return;
 	}
+	
+	std::string ogMsg = std::string(msg.message());
+	bool twitchEmoteAdded = false;
 
+	std::vector<std::string> words = split(ogMsg, ' ');
+	foreach(std::string word, words) {
+		std::string url = twitchEmotes[word];
+		if (url.length() > 0) {
+			twitchEmoteAdded = true;
+			url = "<img src=\"" + url + "\" alt=\"Smiley face\">";
+			ogMsg = replaceAll(ogMsg, word, url);
+		}
+	}
+
+	msg.set_message(ogMsg);
 	QString text = u8(msg.message());
 	bool changed = false;
 
@@ -1215,12 +1240,13 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 
 		tm.qlSessions.append(session);
 	}
-
-	users.remove(uSource);
+	
+	if (!twitchEmoteAdded)
+		users.remove(uSource);
 
 	foreach(ServerUser *u, users)
 		sendMessage(u, msg);
-
+	
 	emit userTextMessage(uSource, tm);
 }
 

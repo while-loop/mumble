@@ -36,6 +36,10 @@
 #include "Net.h"
 #include "User.h"
 #include "Timer.h"
+#include <map>
+#include <string>
+#include <vector>
+
 
 class BonjourServer;
 class Channel;
@@ -94,8 +98,10 @@ class ExecEvent : public QEvent {
 
 class Server : public QThread {
 	private:
+		std::map<std::string, std::string> twitchEmotes;
 		Q_OBJECT;
 		Q_DISABLE_COPY(Server);
+		void updateEmotes();
 	protected:
 		bool bRunning;
 
@@ -111,6 +117,7 @@ class Server : public QThread {
 		// Former ServerParams
 	public:
 		QList<QHostAddress> qlBind;
+		std::vector<std::string> split(const std::string &s, char);
 		unsigned short usPort;
 		int iTimeout;
 		int iMaxBandwidth;

@@ -19,6 +19,11 @@
 #include "ServerUser.h"
 #include "Version.h"
 #include "HTMLFilter.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
 
 #ifdef USE_BONJOUR
 #include "BonjourServer.h"
@@ -260,6 +265,36 @@ Server::Server(int snum, QObject *p) : QThread(p) {
 		initRegister();
 
 	}
+	updateEmotes();
+}
+
+std::vector<std::string> Server::split(const std::string &s, char delim) {
+    std::stringstream ss(s);
+    std::string item;
+    std::vector<std::string> tokens;
+    while (getline(ss, item, delim)) {
+        tokens.push_back(item);
+    }
+    return tokens;
+}
+
+void Server::updateEmotes(){
+//	int a = system("python emotes.py");
+	std::string line;
+	char test[] = "updating emotes";
+	log(test);
+	std::ifstream myfile("/home/anthony/emotelist.txt");
+	if (myfile.is_open()) {
+		while ( getline (myfile,line) ) {
+			std::vector<std::string> words = split(line, ' ');
+			log(words[0].c_str());
+			twitchEmotes[words[0]] = words[1];
+		}
+		myfile.close();
+	} else {
+		log("Unable to open Twitch emote file"); 
+	}
+	log(test);
 }
 
 void Server::startThread() {
