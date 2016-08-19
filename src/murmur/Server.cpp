@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <stdio.h> 
 
 #ifdef USE_BONJOUR
 #include "BonjourServer.h"
@@ -279,22 +280,43 @@ std::vector<std::string> Server::split(const std::string &s, char delim) {
 }
 
 void Server::updateEmotes(){
-//	int a = system("python emotes.py");
-	std::string line;
-	char test[] = "updating emotes";
-	log(test);
-	std::ifstream myfile("/home/anthony/emotelist.txt");
+	log("executing python script");
+	#ifdef WINDOWS
+		#include <direct.h>
+		#define GetCurrentDir _getcwd
+	#else
+		#include <unistd.h>
+		#define GetCurrentDir getcwd
+	#endif
+
+	char cCurrentPath[FILENAME_MAX];
+
+	if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
+		log("Unable to get current dir");
+	}
+
+	cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
+	log(cCurrentPath);
+
+	int a = system("python /home/root/emotes.py /home/root/emotelist.txt");
+	log("Opening emotelist.txt");
+	std::ifstream myfile("/home/root/emotelist.txt");
 	if (myfile.is_open()) {
+		log("emotelist.txt opened");
+		std::string line;
+		int i = 0;
 		while ( getline (myfile,line) ) {
 			std::vector<std::string> words = split(line, ' ');
-			log(words[0].c_str());
+			if (i++ % 1000 == 0) {
+				log(words[0].c_str());
+			}
 			twitchEmotes[words[0]] = words[1];
 		}
 		myfile.close();
 	} else {
 		log("Unable to open Twitch emote file"); 
 	}
-	log(test);
+	log("Finished updating emotes");
 }
 
 void Server::startThread() {
