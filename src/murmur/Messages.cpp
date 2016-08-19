@@ -1145,20 +1145,23 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 			return;
 	}
 	
-	std::string ogMsg = std::string(msg.message());
 	bool twitchEmoteAdded = false;
 
-	std::vector<std::string> words = split(ogMsg, ' ');
+	std::vector<std::string> words = split(msg.message(), ' ');
+	std::string newMsg = "";
 	foreach(std::string word, words) {
 		std::string url = twitchEmotes[word];
 		if (url.length() > 0) {
+			log(word.c_str());
 			twitchEmoteAdded = true;
-			url = "<img src=\"" + url + "\" title=\"" + word + "\" alt=\"" + word + "\">";
-			ogMsg = replaceAll(ogMsg, word, url);
+			url = "<img src=\"" + url + "\" title=\"" + word + "\">";
+			newMsg += url + " ";
+		} else {
+			newMsg += word + " ";
 		}
 	}
 
-	msg.set_message(ogMsg);
+	msg.set_message(newMsg);
 	QString text = u8(msg.message());
 	bool changed = false;
 
