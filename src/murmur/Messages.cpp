@@ -1153,7 +1153,7 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 		std::string url = twitchEmotes[word];
 		if (url.length() > 0) {
 			twitchEmoteAdded = true;
-			url = "<img src=\"" + url + "\" alt=\"Smiley face\">";
+			url = "<img src=\"" + url + "\" title=\"" + word + "\" alt=\"" + word + "\">";
 			ogMsg = replaceAll(ogMsg, word, url);
 		}
 	}
